@@ -2,12 +2,14 @@
  * Created by cshlovjah on 16.09.16.
  */
 // config/passport.js
-
+var moment = require('moment');
+var dateTime = require('../app/libs/utilities');
+var dt = new dateTime();
 // load all the things we need
 var LocalStrategy   = require('passport-local').Strategy;
 
 // load up the user model
-var User            = require('../app/models/user');
+var User            = require('../api/models/user');
 
 // expose this function to our app using module.exports
 module.exports = function(passport) {
@@ -63,11 +65,11 @@ module.exports = function(passport) {
                         // if there is no user with that email
                         // create the user
                         var newUser            = new User();
-
-                        // set the user's local credentials
+                                    // set the user's local credentials
                         newUser.local.email    = email;
                         newUser.local.password = newUser.generateHash(password);
-
+                        newUser.local.createdAt = dt.nowISODate();
+                        newUser.local.updatedAt = dt.nowISODate();
                         // save the user
                         newUser.save(function(err) {
                             if (err)
@@ -109,6 +111,56 @@ module.exports = function(passport) {
 
                 // all is well, return successful user
                 return done(null, user);
+            });
+
+        }));
+
+//А здесь надо подумать
+    passport.use('local-login-change', new LocalStrategy({
+            // by default, local strategy uses username and password, we will override with email
+            usernameField : 'email',
+            passwordField : 'password',
+            passReqToCallback : true // allows us to pass back the entire request to the callback
+        },
+        function(req, email, password, done) {
+
+            // asynchronous
+            // User.findOne wont fire unless data is sent back
+            process.nextTick(function() {
+                console.log(email)
+                // find a user whose email is the same as the forms email
+                // we are checking to see if the user trying to login already exists
+                User.findOne({ 'local.email' :  email }, function(err, user) {
+                    // if there are any errors, return the error
+                    if (err)
+                        return done(err);
+
+                    // check to see if theres already a user with that email
+                    if (user) {
+                        return done(null, false, req.flash('signupMessage', 'That email is already taken.'));
+                    } else {
+
+                        console.log(user)
+                        /*
+                        // if there is no user with that email
+                        // create the user
+                        newUser = {};
+                        // set the user's local credentials
+                        newUser.local.email    = email;
+                        newUser.local.password = newUser.generateHash(password);
+                        //newUser.local.createdAt = dt.nowISODate();
+                        newUser.local.updatedAt = dt.nowISODate();
+                        // save the user
+                        newUser.save(function(err) {
+                            if (err)
+                                throw err;
+                            return done(null, newUser);
+                        });
+                        */
+                    }
+
+                });
+
             });
 
         }));
