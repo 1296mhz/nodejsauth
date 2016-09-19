@@ -14,7 +14,7 @@ exports.findUserAll = function (req, res) {
 }
 
 exports.findUserById = function (req, res) {
-    log.info("Retrive's values from user ");
+    log.info("Retrive's values from user id ");
     var _id = req.params.id;
     var query = User.find({ '_id': _id },function (err, users) {
         console.log(users);
@@ -23,9 +23,13 @@ exports.findUserById = function (req, res) {
 }
 
 exports.addUser = function (req, res) {
-    console.log(req);
+    //console.log(req);
+    var user = req.body;
+
+    log.info('Adding user: ' + JSON.stringify(user));
     res.send({"status": "ok"});
 }
+
 exports.updateUser = function (req, res) {
     console.log(req);
     res.send({"status": "ok"});
